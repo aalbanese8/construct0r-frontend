@@ -1,0 +1,5 @@
+{
+  "name": "construct0r - AI Workflow Canvas",
+  "description": "A visual node-based workflow editor to gather context from videos, web pages, and text, then power AI chats using Google Gemini.",
+  "requestFramePermissions": []
+}
