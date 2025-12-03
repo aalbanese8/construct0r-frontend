@@ -3,26 +3,26 @@ import { apiClient } from '../config/api';
 // Authentication
 export const authAPI = {
   signup: (email: string, password: string, name: string) =>
-    apiClient.post('/auth/signup', { email, password, name }),
+    apiClient.post('/auth/register', { email, password, name }),
 
   login: (email: string, password: string) =>
     apiClient.post('/auth/login', { email, password }),
 
-  getMe: () => apiClient.get('/auth/me'),
+  getMe: () => apiClient.get('/auth/user'),
 };
 
 // Projects
 export const projectAPI = {
-  getAll: () => apiClient.get('/projects'),
+  getAll: () => apiClient.get('/api/projects'),
 
-  getById: (id: string) => apiClient.get(`/projects/${id}`),
+  getById: (id: string) => apiClient.get(`/api/projects/${id}`),
 
-  create: (name: string) => apiClient.post('/projects', { name }),
+  create: (name: string) => apiClient.post('/api/projects', { name }),
 
   update: (id: string, data: { name?: string; nodes?: any; edges?: any }) =>
-    apiClient.put(`/projects/${id}`, data),
+    apiClient.put(`/api/projects/${id}`, data),
 
-  delete: (id: string) => apiClient.delete(`/projects/${id}`),
+  delete: (id: string) => apiClient.delete(`/api/projects/${id}`),
 };
 
 // Content Extraction
