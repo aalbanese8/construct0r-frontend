@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Layout, Trash2, FolderOpen, ChevronRight, ChevronLeft, LogOut } from 'lucide-react';
 import { Project, User } from '../types';
 import clsx from 'clsx';
@@ -10,6 +10,7 @@ interface SidebarProps {
   onSelectProject: (id: string) => void;
   onCreateProject: () => void;
   onDeleteProject: (id: string, e: React.MouseEvent) => void;
+  onRenameProject: (id: string, newName: string) => void;
   onLogout: () => void;
 }
 
@@ -20,9 +21,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectProject,
   onCreateProject,
   onDeleteProject,
+  onRenameProject,
   onLogout,
 }) => {
   const [collapsed, setCollapsed] = useState(false);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Focus input when editing starts
+  useEffect(() => {
+    if (editingProjectId && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editingProjectId]);
+
+  const handleStartEdit = (project: Project, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingProjectId(project.id);
+    setEditingName(project.name);
+  };
+
+  const handleSaveEdit = () => {
+    if (editingProjectId && editingName.trim()) {
+      onRenameProject(editingProjectId, editingName.trim());
+    }
+    setEditingProjectId(null);
+    setEditingName('');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingProjectId(null);
+    setEditingName('');
+  };
 
   return (
     <div 
@@ -63,25 +95,46 @@ export const Sidebar: React.FC<SidebarProps> = ({
          {projects.map(project => (
            <button
              key={project.id}
-             onClick={() => onSelectProject(project.id)}
+             onClick={() => editingProjectId !== project.id && onSelectProject(project.id)}
              className={clsx(
                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all group relative",
-               activeProjectId === project.id 
-                 ? "bg-primary/10 text-white shadow-sm border border-primary/20" 
+               activeProjectId === project.id
+                 ? "bg-primary/10 text-white shadow-sm border border-primary/20"
                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
              )}
              title={project.name}
            >
              <FolderOpen className={clsx(
-                "w-4 h-4 shrink-0", 
+                "w-4 h-4 shrink-0",
                 activeProjectId === project.id ? "text-primary" : "text-slate-500 group-hover:text-slate-400"
              )} />
-             
+
              {!collapsed && (
                 <>
-                    <span className="truncate flex-1 text-left">{project.name}</span>
-                    {projects.length > 1 && (
-                        <div 
+                    {editingProjectId === project.id ? (
+                      <input
+                        ref={inputRef}
+                        type="text"
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        onBlur={handleSaveEdit}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSaveEdit();
+                          if (e.key === 'Escape') handleCancelEdit();
+                        }}
+                        className="nodrag flex-1 bg-slate-900 border border-primary/50 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-primary"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ) : (
+                      <span
+                        className="truncate flex-1 text-left cursor-text"
+                        onDoubleClick={(e) => handleStartEdit(project, e)}
+                      >
+                        {project.name}
+                      </span>
+                    )}
+                    {editingProjectId !== project.id && projects.length > 1 && (
+                        <div
                             onClick={(e) => onDeleteProject(project.id, e)}
                             className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-900/50 hover:text-red-300 rounded transition-all absolute right-2"
                         >

@@ -3,22 +3,61 @@ import { useReactFlow } from 'reactflow';
 import { Youtube, Globe, Type, AlertCircle, CheckCircle2, Loader2, FileText } from 'lucide-react';
 import { BaseNode } from './BaseNode';
 import { extractContent } from '../../services/extractor';
-import { SourceNodeData, TextNodeData, NodeProps } from '../../types';
+import { SourceNodeData, TextNodeData, NodeProps, LoadingMessage } from '../../types';
 
 // --- VIDEO NODE ---
 export const VideoNode: React.FC<NodeProps<SourceNodeData>> = ({ id, data, selected }) => {
   const { setNodes } = useReactFlow();
   const [urlInput, setUrlInput] = useState(data.url || '');
+  const [loadingMessage, setLoadingMessage] = useState<LoadingMessage>('Fetching transcript...');
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUrlInput(e.target.value);
   };
 
+  // Update loading message based on elapsed time
+  useEffect(() => {
+    if (data.status === 'loading' && data.loadingStartTime) {
+      const updateMessage = () => {
+        const elapsed = (Date.now() - data.loadingStartTime!) / 1000;
+
+        if (elapsed < 5) {
+          setLoadingMessage('Fetching transcript...');
+        } else if (elapsed < 15) {
+          setLoadingMessage('Checking auto-captions...');
+        } else if (elapsed < 45) {
+          setLoadingMessage('Downloading video...');
+        } else if (elapsed < 75) {
+          setLoadingMessage('Transcribing with AI...');
+        } else {
+          setLoadingMessage('Almost done...');
+        }
+      };
+
+      // Update immediately
+      updateMessage();
+
+      // Update every 3 seconds
+      const interval = setInterval(updateMessage, 3000);
+
+      return () => clearInterval(interval);
+    }
+  }, [data.status, data.loadingStartTime]);
+
   const processUrl = useCallback(async (url: string) => {
     if (!url) return;
-    
-    // Update status to loading
-    setNodes((nodes) => nodes.map(n => n.id === id ? { ...n, data: { ...n.data, status: 'loading', url } } : n));
+
+    // Update status to loading with start time
+    setNodes((nodes) => nodes.map(n => n.id === id ? {
+      ...n,
+      data: {
+        ...n.data,
+        status: 'loading',
+        url,
+        loadingStartTime: Date.now(),
+        loadingMessage: 'Fetching transcript...'
+      }
+    } : n));
 
     // Call service
     const result = await extractContent(url, 'video');
@@ -63,8 +102,19 @@ export const VideoNode: React.FC<NodeProps<SourceNodeData>> = ({ id, data, selec
               onBlur={handleBlur}
               onKeyDown={handleKeyDown}
               />
-              {data.status === 'loading' && <Loader2 className="absolute right-2 top-2 w-4 h-4 animate-spin text-slate-400" />}
           </div>
+
+          {data.status === 'loading' && (
+            <div className="flex flex-col gap-2 bg-slate-900/50 border border-slate-700 rounded p-3 shrink-0">
+              <div className="flex items-center gap-2 text-slate-300 text-xs">
+                <Loader2 className="w-4 h-4 animate-spin text-red-400" />
+                <span className="font-medium">{loadingMessage}</span>
+              </div>
+              <div className="text-[10px] text-slate-500 leading-relaxed">
+                This may take 30-90 seconds for long videos
+              </div>
+            </div>
+          )}
 
           {data.status === 'error' && (
              <div className="flex items-center gap-2 text-red-400 text-xs bg-red-900/20 p-2 rounded shrink-0">
@@ -79,7 +129,10 @@ export const VideoNode: React.FC<NodeProps<SourceNodeData>> = ({ id, data, selec
                   <CheckCircle2 className="w-3 h-3" />
                   <span className="font-medium truncate max-w-[200px]">{data.title}</span>
                </div>
-               <div className="bg-slate-900/50 p-2 rounded text-[10px] text-slate-400 font-mono flex-1 overflow-y-auto custom-scrollbar border border-slate-800">
+               <div
+                 className="nodrag bg-slate-900/50 p-2 rounded text-[10px] text-slate-400 font-mono flex-1 overflow-y-auto custom-scrollbar border border-slate-800"
+                 onWheel={(e) => e.stopPropagation()}
+               >
                  {data.text}
                </div>
             </div>
@@ -122,7 +175,10 @@ export const WebNode: React.FC<NodeProps<SourceNodeData>> = ({ id, data, selecte
           {data.status === 'loading' && <div className="text-xs text-slate-400 flex items-center gap-2 shrink-0"><Loader2 className="w-3 h-3 animate-spin"/> Fetching...</div>}
           
           {data.status === 'success' && (
-             <div className="bg-slate-900/50 p-2 rounded text-[10px] text-slate-400 font-mono flex-1 overflow-y-auto custom-scrollbar border border-slate-800">
+             <div
+               className="nodrag bg-slate-900/50 p-2 rounded text-[10px] text-slate-400 font-mono flex-1 overflow-y-auto custom-scrollbar border border-slate-800"
+               onWheel={(e) => e.stopPropagation()}
+             >
                {data.text}
              </div>
           )}

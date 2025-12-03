@@ -168,9 +168,10 @@ export const ChatNode: React.FC<NodeProps<ChatNodeData>> = ({ id, data, selected
             </div>
 
             {/* Chat History Area */}
-            <div 
+            <div
                 ref={scrollRef}
-                className="flex-1 bg-slate-900 border border-slate-700 rounded p-3 text-xs overflow-y-auto custom-scrollbar min-h-[100px] flex flex-col gap-3"
+                className="nodrag flex-1 bg-slate-900 border border-slate-700 rounded p-3 text-xs overflow-y-auto custom-scrollbar min-h-[100px] flex flex-col gap-3"
+                onWheel={(e) => e.stopPropagation()}
             >
                 {messages.length === 0 && (
                   <div className="text-slate-600 italic text-center mt-10">

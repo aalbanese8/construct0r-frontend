@@ -277,13 +277,22 @@ export default function App() {
   const handleDeleteProject = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (projects.length <= 1) return; // Prevent deleting last project
-    
+
     const newProjects = projects.filter(p => p.id !== id);
     setProjects(newProjects);
-    
+
     if (activeProjectId === id) {
       setActiveProjectId(newProjects[0].id);
     }
+  };
+
+  const handleRenameProject = (id: string, newName: string) => {
+    setProjects(prev => prev.map(p => {
+      if (p.id === id) {
+        return { ...p, name: newName, updatedAt: Date.now() };
+      }
+      return p;
+    }));
   };
 
   const handleSaveFlow = useCallback((nodes: Node[], edges: Edge[]) => {
@@ -311,13 +320,14 @@ export default function App() {
   return (
     <ReactFlowProvider>
       <div className="flex w-screen h-screen bg-background text-slate-100 overflow-hidden">
-        <Sidebar 
-          projects={projects} 
+        <Sidebar
+          projects={projects}
           activeProjectId={activeProjectId}
           user={user}
           onSelectProject={setActiveProjectId}
           onCreateProject={handleCreateProject}
           onDeleteProject={handleDeleteProject}
+          onRenameProject={handleRenameProject}
           onLogout={handleLogout}
         />
         

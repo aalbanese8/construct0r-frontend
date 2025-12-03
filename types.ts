@@ -12,6 +12,14 @@ export enum NodeType {
 
 export type ExtractionStatus = 'idle' | 'loading' | 'success' | 'error';
 
+export type LoadingMessage =
+  | 'Fetching transcript...'
+  | 'Checking auto-captions...'
+  | 'Downloading video...'
+  | 'Compressing audio...'
+  | 'Transcribing with AI...'
+  | 'Almost done...';
+
 export interface BaseNodeData {
   label?: string;
 }
@@ -24,6 +32,8 @@ export interface SourceNodeData extends BaseNodeData {
   platform?: 'youtube' | 'tiktok' | 'instagram' | 'web' | 'drive';
   title?: string;
   fileType?: string;
+  loadingMessage?: LoadingMessage;
+  loadingStartTime?: number;
 }
 
 export interface TextNodeData extends BaseNodeData {

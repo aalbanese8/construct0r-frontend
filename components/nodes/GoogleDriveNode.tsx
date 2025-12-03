@@ -114,7 +114,10 @@ export const GoogleDriveNode: React.FC<NodeProps<SourceNodeData>> = ({ id, data,
           {/* Success Content Preview */}
           {data.status === 'success' && (
             <div className="flex flex-col gap-2 flex-1 min-h-0">
-               <div className="bg-slate-900/50 p-3 rounded text-[10px] text-slate-400 font-mono flex-1 overflow-y-auto custom-scrollbar border border-slate-800 leading-relaxed whitespace-pre-wrap">
+               <div
+                 className="nodrag bg-slate-900/50 p-3 rounded text-[10px] text-slate-400 font-mono flex-1 overflow-y-auto custom-scrollbar border border-slate-800 leading-relaxed whitespace-pre-wrap"
+                 onWheel={(e) => e.stopPropagation()}
+               >
                  {data.text}
                </div>
                <div className="text-[10px] text-slate-600 text-right">
